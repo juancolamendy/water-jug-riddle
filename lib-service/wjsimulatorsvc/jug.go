@@ -52,5 +52,5 @@ func (j *Jug) transferTo(target *Jug) {
 }
 
 func (j *Jug) dump() {
-	log.Printf("Jug. Name: %s, Capacity: %d, Current: %d, State: %s", j.Name, j.Capacity, j.Current, j.State)
+	log.Printf("Jug. Name: %s, Capacity: %d, Current: %d, State: %s\n", j.Name, j.Capacity, j.Current, j.State)
 }

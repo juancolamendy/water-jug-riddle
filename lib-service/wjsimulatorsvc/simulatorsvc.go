@@ -7,19 +7,31 @@ import (
 	"github.com/juancolamendy/water-jug-riddle/lib-service/utils/mathutils"
 )
 
+type SimulatorSvcOpts struct {
+	Verbose bool
+}
+
+func DefaultOpts() *SimulatorSvcOpts {
+	return &SimulatorSvcOpts{Verbose: true}
+}
+
 type SimulatorSvc struct {
 	inChan chan *SimulateReq
 	outChan chan *SimulateResp
 
 	isProcessing bool
+
+	verbose bool
 }
 
-func NewSimulatorSvc() *SimulatorSvc {
+func NewSimulatorSvc(opts *SimulatorSvcOpts) *SimulatorSvc {
 	svc := &SimulatorSvc{
 		inChan: make(chan *SimulateReq),
 		outChan: make(chan *SimulateResp),
 		
 		isProcessing: false,
+
+		verbose: opts.Verbose,
 	}
 	go svc.eventLoop()
 
@@ -57,6 +69,93 @@ func (s *SimulatorSvc) validateReq(req *SimulateReq) (bool, string) {
 	return true, ""
 }
 
+func (s *SimulatorSvc) buildJugMap(bigJug *Jug, smallJug *Jug) map[string]Jug {
+	jugMap := make(map[string]Jug)
+
+	jugMap[bigJug.Name] = *bigJug
+	jugMap[smallJug.Name] = *smallJug
+
+	return jugMap	
+}
+
+func (s *SimulatorSvc) doSimulation(req *SimulateReq) {
+	// Init
+	var bigJug *Jug
+	var smallJug *Jug
+	
+	if req.Jugs[0].Capacity > req.Jugs[1].Capacity {
+		bigJug = req.Jugs[0]
+		smallJug = req.Jugs[1]
+	} else {
+		bigJug = req.Jugs[1]
+		smallJug = req.Jugs[0]
+	}
+	bigJug.empty()
+	smallJug.empty()
+	
+	// Logic
+	s.outChan <- &SimulateResp {
+		Error: false,
+		Payload: s.buildJugMap(bigJug, smallJug),
+	}
+	
+	bigJug.fill()
+	s.outChan <- &SimulateResp {
+		Error: false,
+		Payload: s.buildJugMap(bigJug, smallJug),
+	}	
+	if s.verbose {
+		log.Println("initial fill bigJug")
+		bigJug.dump()
+	}	
+
+	for {		
+		bigJug.transferTo(smallJug)
+		s.outChan <- &SimulateResp {
+			Error: false,
+			Payload: s.buildJugMap(bigJug, smallJug),
+		}
+		if s.verbose {
+			log.Println("transferTo from bigJug to smallJug")
+			bigJug.dump()
+			smallJug.dump()
+		}
+		if bigJug.Current == req.Measure {
+			break
+		}
+
+		if bigJug.Current == 0 {			
+			bigJug.fill()
+			s.outChan <- &SimulateResp {
+				Error: false,
+				Payload: s.buildJugMap(bigJug, smallJug),
+			}
+			if s.verbose {
+				log.Println("fill bigJug")
+				bigJug.dump()
+			}
+			if bigJug.Current == req.Measure {
+				break
+			}			
+		}
+
+		if smallJug.Current == smallJug.Capacity {			
+			smallJug.empty()
+			s.outChan <- &SimulateResp {
+				Error: false,
+				Payload: s.buildJugMap(bigJug, smallJug),
+			}
+			if s.verbose {
+				log.Println("empty smallJug")
+				smallJug.dump()
+			}
+			if smallJug.Current == req.Measure {
+				break
+			}			
+		}
+	}
+}
+
 func (s *SimulatorSvc) eventLoop() {
 	for {
 		select {
@@ -67,7 +166,7 @@ func (s *SimulatorSvc) eventLoop() {
 			// Validate req
 			if ok, msg := s.validateReq(req); !ok {
 				s.outChan <- &SimulateResp {
-					Error: false,
+					Error: true,
 					Payload: msg,
 				}
 			}
@@ -75,7 +174,8 @@ func (s *SimulatorSvc) eventLoop() {
 			// Start processing
 			s.isProcessing = true
 
-			// Init processing structure
+			// Do simulation
+			s.doSimulation(req)
 
 			// End processing
 			s.isProcessing = false
