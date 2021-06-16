@@ -54,7 +54,7 @@ func (s *SimulatorSvc) validateReq(req *SimulateReq) (bool, string) {
 	if req.Measure <= 0 {
 		return false, errorcodes.ERROR_MEASURE_MUST_GREATER_0
 	}
-	maxCap := mathutils.Max(req.Jugs[0].Capacity, req.Jugs[1].Capacity) 
+	maxCap := mathutils.Max(req.Jugs[0].Capacity, req.Jugs[1].Capacity)
 	if req.Measure >= maxCap {
 		return false, errorcodes.ERROR_MEASURE_MUST_LESS_MAX_CAPACITY
 	}
@@ -92,6 +92,12 @@ func (s *SimulatorSvc) doSimulation(req *SimulateReq) {
 	}
 	bigJug.empty()
 	smallJug.empty()
+	if s.verbose {
+		log.Println("Start simulation")
+		log.Printf("Measure: %d\n", req.Measure)
+		smallJug.dump()
+		bigJug.dump()
+	}
 	
 	// Logic
 	s.outChan <- &SimulateResp {
@@ -169,6 +175,7 @@ func (s *SimulatorSvc) eventLoop() {
 					Error: true,
 					Payload: msg,
 				}
+				continue
 			}
 
 			// Start processing

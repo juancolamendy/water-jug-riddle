@@ -3,7 +3,7 @@ compile-service:
 	go build ./...
 
 test-simulator:
-	cd lib-service/wjsimulatorsvc ;\
+	cd lib-service/service/wjsimulatorsvc ;\
 	go test -v -run TestSimulator
 
 run-api-dev:

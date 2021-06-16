@@ -4,8 +4,12 @@ import (
 	"time"
 	"net/http"
 	"log"
+	"bytes"
+	"encoding/json"	
 
 	"github.com/gorilla/websocket"
+
+	"github.com/juancolamendy/water-jug-riddle/lib-service/service/wjsimulatorsvc"
 )
 
 const (
@@ -27,22 +31,20 @@ var upgrader = websocket.Upgrader {
 type WsServer struct {
 	conn *websocket.Conn
 	compCh chan bool
-
-	notificationCh chan string
+	simulatorSvc *wjsimulatorsvc.SimulatorSvc
 }
 
-func NewWsServer() *WsServer {
+func NewWsServer() *WsServer {	
 	return &WsServer{
 		compCh: make(chan bool),
-
-		notificationCh: make(chan string),
+		simulatorSvc: wjsimulatorsvc.NewSimulatorSvc(wjsimulatorsvc.DefaultOpts()),
 	}
 }
 
 func (ws *WsServer) Serve(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("--- Websocket error: %v\n", err)
+		log.Printf("Websocket error: %v\n", err)
 		return
 	}
 	ws.conn = conn
@@ -63,13 +65,22 @@ func (ws *WsServer) write() {
 		for {
 			select {
 			case <- ws.compCh:
-				log.Println("--- End of websocket connection")
+				log.Println("End of websocket connection")
 				return
-			case msg := <- ws.notificationCh:
-				log.Printf("--- Received and forwarding message: %s\n", msg)
+			case resp := <- ws.simulatorSvc.GetOutChan():
+				// Encode simulator response
+				b := bytes.NewBuffer(make([]byte, 0, 20))
+				err := json.NewEncoder(b).Encode(resp)
+				if err != nil {
+					log.Printf("Error on encoding resp. Error:[%+v]\n", err)
+					continue
+				}
+				msg := b.Bytes()
+
+				// Forward simulator resp through the ws connection
 				ws.conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if err := ws.conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
-					log.Printf("--- Websocket error: %v\n", err)
+				if err := ws.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+					log.Printf("Websocket error: %v\n", err)
 					continue
 				}
 			}
@@ -90,17 +101,27 @@ func (ws *WsServer) read() {
 	ws.conn.SetPongHandler(func(string) error { ws.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	for {
+		// Wait for input
 		_, payload, err := ws.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("--- Websocket error: %v\n", err)
+				log.Printf("Websocket error: %v\n", err)
 			}
-			log.Println("--- Sending end of websocket connection")
+			log.Println("Sending end of websocket connection")
 			ws.compCh <- true
 			close(ws.compCh)
 			return
 		}
-		log.Printf("--- %+v\n", string(payload))
-		ws.notificationCh <- string(payload)
+		// Decode input
+		req := &wjsimulatorsvc.SimulateReq{}
+		b := bytes.NewBuffer(payload)
+		err = json.NewDecoder(b).Decode(req)
+		if err != nil {
+			log.Printf("Error on decoding payload. Payload:[%s] Error:[%+v]\n", string(payload), err)
+			continue
+		}
+
+		// Send request to simulator
+		ws.simulatorSvc.Simulate(req)
 	}
 }
