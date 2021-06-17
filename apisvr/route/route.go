@@ -8,7 +8,7 @@ import (
     "github.com/juancolamendy/water-jug-riddle/lib-service/utils/constant"
 
     // Controllers
-    "github.com/juancolamendy/water-jug-riddle/apisvr/controller/indexctl"
+    "github.com/juancolamendy/water-jug-riddle/apisvr/controller/wsctl"
 )
 
 func GetRouter() *mux.Router {
@@ -16,7 +16,7 @@ func GetRouter() *mux.Router {
 	rtr := mux.NewRouter()
 
 	// index_controller
-	rtr.HandleFunc(constant.RTE_INDEX, indexctl.GetIndexPage).Methods(constant.HTTP_GET)
+	rtr.HandleFunc(constant.RTE_WS_INDEX, wsctl.GetIndex).Methods(constant.HTTP_GET)
 
 	// Return router
 	return rtr

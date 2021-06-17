@@ -1,4 +1,4 @@
-package indexctl
+package wsctl
 
 import (
 	// External dependencies
@@ -7,7 +7,7 @@ import (
 	"github.com/juancolamendy/water-jug-riddle/apisvr/server/wsserver"
 )
 
-func GetIndexPage(w http.ResponseWriter, r *http.Request) {
+func GetIndex(w http.ResponseWriter, r *http.Request) {
 	svr := wsserver.NewWsServer()
 	svr.Serve(w, r)
 }

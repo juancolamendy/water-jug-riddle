@@ -23,8 +23,9 @@ app.prepare().then(() => {
 		'/api/v1',
 		createProxyMiddleware({
 			target: apiServerUrl,
-			changeOrigin: true,
 			logLevel: conf.LOG_LEVEL,
+			changeOrigin: true,
+			ws: true,
 		})
 	);
 

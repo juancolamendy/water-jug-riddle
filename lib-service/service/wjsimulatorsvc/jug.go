@@ -14,7 +14,7 @@ const (
 
 type Jug struct {
 	Capacity int    `json:"capacity"`
-	Current  int    `json:"-"`
+	Current  int    `json:"current"`
 	State    string `json:"state"`
 	Name     string `json:"name"`
 }

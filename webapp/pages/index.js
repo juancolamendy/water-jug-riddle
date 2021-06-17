@@ -1,14 +1,18 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 import { Input, Button } from '../components/';
+
+import { useWebsocket } from '../hooks/';
 
 const Index = () => {
 
 	// State
-	const [processing, setProcess] = useState(false);
-	const [amount1, setAmount1] = useState(1);
-	const [amount2, setAmount2] = useState(1);
-	const [measure, setMeasure] = useState(1);
+	const [forceOpen, setForceOpen] = useState(false);
+
+	const [processing, setProcessing] = useState(false);
+	const [amount1, setAmount1] = useState(5);
+	const [amount2, setAmount2] = useState(3);
+	const [measure, setMeasure] = useState(4);
 
 	// Computed values
 	const amount1Invalid = useMemo(() => amount1 <= 0, [amount1]);
@@ -16,10 +20,32 @@ const Index = () => {
 	const measureInvalid = useMemo(() => measure <= 0, [measure]);
 	const buttonValid = useMemo(() => !amount1Invalid && !amount2Invalid && !measureInvalid, [amount1Invalid, amount2Invalid, measureInvalid])
 
+	// Effects
+	const { setWsInput, wsOutput, wsConnected } = useWebsocket('ws://localhost:3000/api/v1/ws', forceOpen);
+
+	useEffect(() => {
+		if(!wsConnected) {
+			console.log('reconnect');
+			setForceOpen(!forceOpen);
+		}
+	}, [wsConnected]);
+
+	useEffect(() => {
+		const data = JSON.parse(wsOutput);
+		console.log('received:', data);			
+	}, [wsOutput]);
+
 	// Handlers
-	const handleSubmit = async (event) => {
+	const handleSubmit = (event) => {
 		event.preventDefault();
-		console.log('handleSubmit');
+		console.log('handleSubmit:');
+
+		const data = JSON.stringify({
+			"measure": parseInt(measure), 
+			"jugs": [{"capacity": parseInt(amount1), "name": "jug01"}, {"capacity": parseInt(amount2), "name": "jug02"}],
+			"ts": Date.now(),
+		});
+		setWsInput(data);		
 	};
 
 	return (
