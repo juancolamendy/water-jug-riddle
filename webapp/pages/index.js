@@ -4,6 +4,13 @@ import { Input, Button } from '../components/';
 
 import { useWebsocket } from '../hooks/';
 
+import constant from '../utils/constant';
+
+import { buildBaseWsUrl } from '../utils/webutils';
+
+const baseWsUrl = buildBaseWsUrl();
+const WS_URL = `${baseWsUrl}${constant.API_WS_INDEX}`;
+
 const Index = () => {
 
 	// State
@@ -21,7 +28,7 @@ const Index = () => {
 	const buttonValid = useMemo(() => !amount1Invalid && !amount2Invalid && !measureInvalid, [amount1Invalid, amount2Invalid, measureInvalid])
 
 	// Effects
-	const { setWsInput, wsOutput, wsConnected } = useWebsocket('ws://localhost:3000/api/v1/ws', forceOpen);
+	const { setWsInput, wsOutput, wsConnected } = useWebsocket(WS_URL, forceOpen);
 
 	useEffect(() => {
 		if(!wsConnected) {
