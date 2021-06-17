@@ -25,6 +25,11 @@ install-webapp-dev:
 	npm i
 
 .PHONY: run-webapp-dev
+run-webapp-lint:
+	cd $(WEBAPP_DIR) ;\
+	npm run lint
+
+.PHONY: run-webapp-dev
 run-webapp-dev:
 	cd $(WEBAPP_DIR) ;\
 	npm run dev

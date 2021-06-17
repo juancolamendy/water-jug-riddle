@@ -25,6 +25,7 @@
       "jsx-a11y/accessible-emoji": "off",
       "react/prop-types": "off",
       "react/no-unescaped-entities": "off",
-      "no-irregular-whitespace": "off"
+      "no-irregular-whitespace": "off",
+      "no-console": "off"
     }
 }
