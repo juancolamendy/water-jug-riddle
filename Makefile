@@ -1,11 +1,30 @@
+CODE_ENTRY=cmd/main.go
+SIMULATOR_DIR=lib-service
+APISVR_DIR=apisvr
+WEBAPP_DIR=webapp
+
+.PHONY: compile-service
 compile-service:
-	cd lib-service ;\
+	cd $(SIMULATOR_DIR) ;\
 	go build ./...
 
+.PHONY: test-simulator
 test-simulator:
-	cd lib-service/service/wjsimulatorsvc ;\
+	cd $(SIMULATOR_DIR)/service/wjsimulatorsvc ;\
 	go test -v -run TestSimulator
 
+.PHONY: run-api-dev
 run-api-dev:
-	cd apisvr ;\
-	go run cmd/main.go
+	cd $(APISVR_DIR) ;\
+	go run $(CODE_ENTRY)
+
+.PHONY: install-webapp-dev
+install-webapp-dev:
+	cd $(WEBAPP_DIR) ;\
+	rm -fr node_modules ;\
+	npm i
+
+.PHONY: run-webapp-dev
+run-webapp-dev:
+	cd $(WEBAPP_DIR) ;\
+	npm run dev

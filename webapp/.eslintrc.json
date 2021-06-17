@@ -1,0 +1,30 @@
+{
+    "parser": "babel-eslint",
+    "plugins": [
+        "react"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "jsx": true
+        }
+    },
+    "env": {
+        "es6":     true,
+        "browser": true,
+        "node":    true,
+        "mocha":   true
+    },   
+    "extends": [
+        "eslint:recommended", 
+        "plugin:react/recommended"
+    ],    
+    "rules": {
+      "react-hooks/exhaustive-deps": "off",
+      "jsx-a11y/accessible-emoji": "off",
+      "react/prop-types": "off",
+      "react/no-unescaped-entities": "off",
+      "no-irregular-whitespace": "off"
+    }
+}

@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-    HTTP_PORT                string `env:"HTTP_PORT,default=3000"`
-	ENVIRONMENT              string `env:"ENVIRONMENT,default=dev"`
+    HTTP_PORT    string `env:"HTTP_PORT,default=3001"`
+	ENVIRONMENT  string `env:"ENVIRONMENT,default=dev"`
 }
 
 func GetConfig() *Config {

@@ -35,8 +35,6 @@ gopkg.in/
 node_modules/
 
 # Bundle
-console/resources/public/js/bundle.js
-console/resources/public/js/*.png
 .next/
 build/
 
@@ -67,4 +65,7 @@ node_modules/
 # Optional eslint cache
 .eslintcache
 
-console/resources/public/js/bundle.js
+node_modules
+.next
+build
+resources
