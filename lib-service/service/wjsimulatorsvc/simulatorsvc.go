@@ -69,13 +69,16 @@ func (s *SimulatorSvc) validateReq(req *SimulateReq) (bool, string) {
 	return true, ""
 }
 
-func (s *SimulatorSvc) buildJugMap(bigJug *Jug, smallJug *Jug) map[string]Jug {
+func (s *SimulatorSvc) buildJugsStatus(lastStep bool, bigJug *Jug, smallJug *Jug) *JugsStatus {
 	jugMap := make(map[string]Jug)
 
 	jugMap[bigJug.Name] = *bigJug
 	jugMap[smallJug.Name] = *smallJug
 
-	return jugMap	
+	return &JugsStatus {
+		LastStep: lastStep,
+		JugMap: jugMap,
+	}
 }
 
 func (s *SimulatorSvc) doSimulation(req *SimulateReq) {
@@ -102,13 +105,13 @@ func (s *SimulatorSvc) doSimulation(req *SimulateReq) {
 	// Logic
 	s.outChan <- &SimulateResp {
 		Error: false,
-		Payload: s.buildJugMap(bigJug, smallJug),
+		Payload: s.buildJugsStatus(false, bigJug, smallJug),
 	}
 	
 	bigJug.fill()
 	s.outChan <- &SimulateResp {
 		Error: false,
-		Payload: s.buildJugMap(bigJug, smallJug),
+		Payload: s.buildJugsStatus(false, bigJug, smallJug),
 	}	
 	if s.verbose {
 		log.Println("initial fill bigJug")
@@ -117,45 +120,48 @@ func (s *SimulatorSvc) doSimulation(req *SimulateReq) {
 
 	for {		
 		bigJug.transferTo(smallJug)
+		status := s.buildJugsStatus(bigJug.Current == req.Measure, bigJug, smallJug)
 		s.outChan <- &SimulateResp {
 			Error: false,
-			Payload: s.buildJugMap(bigJug, smallJug),
+			Payload: status,
 		}
 		if s.verbose {
 			log.Println("transferTo from bigJug to smallJug")
 			bigJug.dump()
 			smallJug.dump()
 		}
-		if bigJug.Current == req.Measure {
+		if status.LastStep {
 			break
 		}
 
 		if bigJug.Current == 0 {			
 			bigJug.fill()
+			status := s.buildJugsStatus(bigJug.Current == req.Measure, bigJug, smallJug)
 			s.outChan <- &SimulateResp {
 				Error: false,
-				Payload: s.buildJugMap(bigJug, smallJug),
+				Payload: status,
 			}
 			if s.verbose {
 				log.Println("fill bigJug")
 				bigJug.dump()
 			}
-			if bigJug.Current == req.Measure {
+			if status.LastStep {
 				break
 			}			
 		}
 
 		if smallJug.Current == smallJug.Capacity {			
 			smallJug.empty()
+			status := s.buildJugsStatus(smallJug.Current == req.Measure, bigJug, smallJug)
 			s.outChan <- &SimulateResp {
 				Error: false,
-				Payload: s.buildJugMap(bigJug, smallJug),
+				Payload: status,
 			}
 			if s.verbose {
 				log.Println("empty smallJug")
 				smallJug.dump()
 			}
-			if smallJug.Current == req.Measure {
+			if status.LastStep {
 				break
 			}			
 		}

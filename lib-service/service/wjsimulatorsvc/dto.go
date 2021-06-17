@@ -11,3 +11,8 @@ type SimulateResp struct {
 	Error   bool        `json:"error"`
 	Payload interface{} `json:"payload"`
 }
+
+type JugsStatus struct {
+	JugMap   map[string]Jug `json:"jugMap"`
+	LastStep bool           `json:"lastStep"`
+}
