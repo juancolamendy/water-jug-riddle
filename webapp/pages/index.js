@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 
-import { Alert, Input, Button } from '../components/';
+import { Alert, Input, Button, Jug } from '../components/';
 
 import { useWebsocket } from '../hooks/';
 
@@ -24,6 +24,7 @@ const Index = () => {
 	const [forceOpen, setForceOpen] = useState(false);
 
 	const [processing, setProcessing] = useState(false);
+	const [result, setResult] = useState(null);
 	const [error, setError] = useState(null);
 	const [amount1, setAmount1] = useState(5);
 	const [amount2, setAmount2] = useState(3);
@@ -56,6 +57,7 @@ const Index = () => {
 				if(data.payload.lastStep) {
 					setProcessing(false);
 				}
+				setResult(data.payload.jugMap);
 			}
 		}
 	}, [wsOutput]);
@@ -67,6 +69,7 @@ const Index = () => {
 		const data = buildRequest({measure, amount1, amount2});
 		console.log('sending request:', data);
 		setError(null);
+		setResult(null);
 		setProcessing(true);
 		setWsInput(data);		
 	};
@@ -79,7 +82,6 @@ const Index = () => {
 	<div className="flex flex-col h-screen items-center pt-10 bg-gray-200">
 
 		<div className="flex flex-col w-3/12">
-			
 			<h1 className="font-extralight text-center text-3xl">
 				{locales.app_title}
 			</h1>
@@ -125,9 +127,16 @@ const Index = () => {
 						onClick={handleSubmit}				
 					/>
 				</form>
-			</div>			
-
+			</div>
 		</div>
+
+		{result && 
+		<div className="flex flex-row justify-between w-3/12 mt-5">
+			<Jug name="jug1" state={result['jug1'].state} stateLabel={locales.state[result['jug1'].state]} current={result['jug1'].current} />
+			<Jug name="jug2" state={result['jug2'].state} stateLabel={locales.state[result['jug2'].state]} current={result['jug2'].current} />
+		</div>
+		}
+
 	</div>
 	);	
 };

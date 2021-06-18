@@ -22,4 +22,10 @@ export default {
 		ERROR_0006: 'No Solution',
 	},
 
+	state: {
+		'empty':        'Empty',
+		'partial_full': 'Partial Full',
+		'full':         'Full',
+	},
+
 };
