@@ -57,3 +57,7 @@ docker-run-apisvr:
 .PHONY: docker-rm-apisvr
 docker-rm-apisvr:
 	docker rmi $(APISVR_NAME)
+
+.PHONY: run-services
+run-services:
+	docker-compose up

@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  webapp:
+    build: ./webapp
+    ports:
+      - "3000:3000"
+    environment:
+      API_HOST: apisvr
+  apisvr:
+    build: ./apisvr
+    ports:
+      - "3001:3001"
