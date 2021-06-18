@@ -2,6 +2,8 @@ CODE_ENTRY=cmd/main.go
 SIMULATOR_DIR=lib-service
 APISVR_DIR=apisvr
 WEBAPP_DIR=webapp
+WEBAPP_PORT=3000
+WEBAPP_NAME=webapp
 
 .PHONY: compile-service
 compile-service:
@@ -33,3 +35,16 @@ run-webapp-lint:
 run-webapp-dev:
 	cd $(WEBAPP_DIR) ;\
 	npm run dev
+
+.PHONY: docker-build-webapp
+docker-build-webapp:
+	cd $(WEBAPP_DIR) ;\
+	docker build . -t $(WEBAPP_NAME)
+
+.PHONY: docker-run-webapp
+docker-run-webapp:
+	docker run --rm -p $(WEBAPP_PORT):$(WEBAPP_PORT) $(WEBAPP_NAME)
+
+.PHONY: docker-rm-webapp
+docker-rm-webapp:
+	docker rmi $(WEBAPP_NAME)
