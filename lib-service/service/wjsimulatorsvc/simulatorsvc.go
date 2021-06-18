@@ -177,6 +177,7 @@ func (s *SimulatorSvc) eventLoop() {
 
 			// Validate req
 			if ok, msg := s.validateReq(req); !ok {
+				log.Printf("--- sending error response: %+v", msg)
 				s.outChan <- &SimulateResp {
 					Error: true,
 					Payload: msg,
@@ -186,12 +187,14 @@ func (s *SimulatorSvc) eventLoop() {
 
 			// Start processing
 			s.isProcessing = true
+			log.Printf("--- start processing: %+v", req)
 
 			// Do simulation
 			s.doSimulation(req)
 
 			// End processing
 			s.isProcessing = false
+			log.Printf("--- end processing: %+v", req)
 		}
 	}
 }

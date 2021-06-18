@@ -15,7 +15,6 @@ import (
 const (
 	writeWait = 10 * time.Second
 	pongWait = 60 * time.Second
-	pingPeriod = (pongWait * 9) / 10
 	maxMessageSize = 512
 	wsBufferSize = 1024
 )
@@ -97,8 +96,8 @@ func (ws *WsServer) read() {
 	}()
 
 	ws.conn.SetReadLimit(maxMessageSize)
-	ws.conn.SetReadDeadline(time.Now().Add(pongWait))
-	ws.conn.SetPongHandler(func(string) error { ws.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	// ws.conn.SetReadDeadline(time.Now().Add(pongWait))
+	// ws.conn.SetPongHandler(func(string) error { ws.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	for {
 		// Wait for input
