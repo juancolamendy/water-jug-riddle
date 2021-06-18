@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-RUN apk update && apk add --no-cache git && apk add ca-certificates && rm -rf /var/cache/apk/* && mkdir -p $GOPATH/src/github.com/juancolamendy/water-jug-riddle
+RUN apk update && apk add --no-cache git && apk add ca-certificates && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 COPY . .
