@@ -1,18 +1,14 @@
 CODE_ENTRY=cmd/main.go
-SIMULATOR_DIR=lib-service
 APISVR_DIR=apisvr
+APISVR_NAME=apisvr
+APISVR_PORT=3001
 WEBAPP_DIR=webapp
 WEBAPP_PORT=3000
 WEBAPP_NAME=webapp
 
-.PHONY: compile-service
-compile-service:
-	cd $(SIMULATOR_DIR) ;\
-	go build ./...
-
 .PHONY: test-simulator
 test-simulator:
-	cd $(SIMULATOR_DIR)/service/wjsimulatorsvc ;\
+	cd $(APISVR_DIR)/service/wjsimulatorsvc ;\
 	go test -v -run TestSimulator
 
 .PHONY: run-api-dev
@@ -48,3 +44,16 @@ docker-run-webapp:
 .PHONY: docker-rm-webapp
 docker-rm-webapp:
 	docker rmi $(WEBAPP_NAME)
+
+.PHONY: docker-build-apisvr
+docker-build-apisvr:
+	cd $(APISVR_DIR) ;\
+	docker build . -t $(APISVR_NAME)
+
+.PHONY: docker-run-apisvr
+docker-run-apisvr:
+	docker run --rm -p $(APISVR_PORT):$(APISVR_PORT) $(APISVR_NAME)
+
+.PHONY: docker-rm-apisvr
+docker-rm-apisvr:
+	docker rmi $(APISVR_NAME)

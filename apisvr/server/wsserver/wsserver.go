@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/juancolamendy/water-jug-riddle/lib-service/service/wjsimulatorsvc"
+	"github.com/juancolamendy/water-jug-riddle/apisvr/service/wjsimulatorsvc"
 )
 
 const (

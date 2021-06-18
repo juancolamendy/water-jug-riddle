@@ -3,8 +3,8 @@ package wjsimulatorsvc
 import (
 	"log"
 
-	"github.com/juancolamendy/water-jug-riddle/lib-service/utils/errorcodes"
-	"github.com/juancolamendy/water-jug-riddle/lib-service/utils/mathutils"
+	"github.com/juancolamendy/water-jug-riddle/apisvr/utils/errorcodes"
+	"github.com/juancolamendy/water-jug-riddle/apisvr/utils/mathutils"
 )
 
 type SimulatorSvcOpts struct {

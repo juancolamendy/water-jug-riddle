@@ -1,4 +1,4 @@
-module github.com/juancolamendy/water-jug-riddle
+module github.com/juancolamendy/water-jug-riddle/apisvr
 
 go 1.13
 

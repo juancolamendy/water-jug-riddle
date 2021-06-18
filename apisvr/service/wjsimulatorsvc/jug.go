@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/juancolamendy/water-jug-riddle/lib-service/utils/mathutils"
+	"github.com/juancolamendy/water-jug-riddle/apisvr/utils/mathutils"
 )
 
 const (

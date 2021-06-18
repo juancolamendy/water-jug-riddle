@@ -5,7 +5,7 @@ import (
     "github.com/gorilla/mux"
 
     // Constants
-    "github.com/juancolamendy/water-jug-riddle/lib-service/utils/constant"
+    "github.com/juancolamendy/water-jug-riddle/apisvr/utils/constant"
 
     // Controllers
     "github.com/juancolamendy/water-jug-riddle/apisvr/controller/wsctl"
