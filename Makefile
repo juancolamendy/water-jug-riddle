@@ -61,3 +61,7 @@ docker-rm-apisvr:
 .PHONY: run-services
 run-services:
 	docker-compose up
+
+.PHONY: stop-services
+stop-services:
+	docker-compose down --rmi all
