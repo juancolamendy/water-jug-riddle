@@ -5,9 +5,12 @@ import (
 	"log"
 )
 
-func printOutJugs(jugMap map[string]Jug) {
-	for _, v := range jugMap {
-		v.dump()
+func printOutJugs(status []*JugsStatus) {
+	for _, s := range status {
+		log.Print("--- status")
+		for _, v := range s.JugMap {
+			v.dump()
+		}		
 	}
 }
 
@@ -18,11 +21,11 @@ func TestSimulator(t *testing.T) {
 	
 	jug01 := &Jug {
 		Name: "jug01",
-		Capacity: 11,
+		Capacity: 2,
 	}
 	jug02 := &Jug {
 		Name: "jug02",
-		Capacity: 9,
+		Capacity: 14,
 	}
 	req := &SimulateReq{
 		Measure: 4,
@@ -32,8 +35,8 @@ func TestSimulator(t *testing.T) {
 
 	for resp := range svc.GetOutChan() {
 		log.Printf("--- received response: %+v", resp)
-		if jugMap, ok := resp.Payload.(map[string]Jug); ok {
-			printOutJugs(jugMap)
+		if status, ok := resp.Payload.([]*JugsStatus); ok {
+			printOutJugs(status)
 		}		
 	}
 }

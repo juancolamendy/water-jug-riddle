@@ -69,103 +69,103 @@ func (s *SimulatorSvc) validateReq(req *SimulateReq) (bool, string) {
 	return true, ""
 }
 
-func (s *SimulatorSvc) buildJugsStatus(lastStep bool, bigJug *Jug, smallJug *Jug) *JugsStatus {
+func (s *SimulatorSvc) buildJugsStatus(bigJug Jug, smallJug Jug) *JugsStatus {
 	jugMap := make(map[string]Jug)
 
-	jugMap[bigJug.Name] = *bigJug
-	jugMap[smallJug.Name] = *smallJug
+	jugMap[bigJug.Name] = bigJug
+	jugMap[smallJug.Name] = smallJug
 
 	return &JugsStatus {
-		LastStep: lastStep,
 		JugMap: jugMap,
 	}
 }
 
-func (s *SimulatorSvc) doSimulation(req *SimulateReq) {
+func (s *SimulatorSvc) pour(measure int, sourceJug Jug, targetJug Jug) []*JugsStatus {
 	// Init
-	var bigJug *Jug
-	var smallJug *Jug
-	
-	if req.Jugs[0].Capacity > req.Jugs[1].Capacity {
-		bigJug = req.Jugs[0]
-		smallJug = req.Jugs[1]
-	} else {
-		bigJug = req.Jugs[1]
-		smallJug = req.Jugs[0]
-	}
-	bigJug.empty()
-	smallJug.empty()
-	if s.verbose {
-		log.Println("Start simulation")
-		log.Printf("Measure: %d\n", req.Measure)
-		smallJug.dump()
-		bigJug.dump()
-	}
-	
+	result := make([]*JugsStatus, 0)
+
 	// Logic
-	s.outChan <- &SimulateResp {
-		Error: false,
-		Payload: s.buildJugsStatus(false, bigJug, smallJug),
-	}
-	
-	bigJug.fill()
-	s.outChan <- &SimulateResp {
-		Error: false,
-		Payload: s.buildJugsStatus(false, bigJug, smallJug),
-	}	
+	sourceJug.empty()
+	targetJug.empty()
 	if s.verbose {
-		log.Println("initial fill bigJug")
-		bigJug.dump()
-	}	
+		log.Println("start simulation")
+		log.Printf("measure: %d\n", measure)
+		targetJug.dump()
+		sourceJug.dump()
+	}
+	result = append(result, s.buildJugsStatus(sourceJug, targetJug))
+	
+	sourceJug.fill()	
+	if s.verbose {
+		log.Println("initial fill sourceJug")
+		sourceJug.dump()
+	}
+	result = append(result, s.buildJugsStatus(sourceJug, targetJug))
 
 	for {		
-		bigJug.transferTo(smallJug)
-		status := s.buildJugsStatus(bigJug.Current == req.Measure, bigJug, smallJug)
-		s.outChan <- &SimulateResp {
-			Error: false,
-			Payload: status,
-		}
+		sourceJug.transferTo(&targetJug)
+		result = append(result, s.buildJugsStatus(sourceJug, targetJug))
 		if s.verbose {
-			log.Println("transferTo from bigJug to smallJug")
-			bigJug.dump()
-			smallJug.dump()
+			log.Println("transferTo from sourceJug to targetJug")
+			sourceJug.dump()
+			targetJug.dump()
 		}
-		if status.LastStep {
+		if sourceJug.Current == measure || targetJug.Current == measure {
 			break
 		}
 
-		if bigJug.Current == 0 {			
-			bigJug.fill()
-			status := s.buildJugsStatus(bigJug.Current == req.Measure, bigJug, smallJug)
-			s.outChan <- &SimulateResp {
-				Error: false,
-				Payload: status,
-			}
+		if sourceJug.Current == 0 {			
+			sourceJug.fill()
+			result = append(result, s.buildJugsStatus(sourceJug, targetJug))
 			if s.verbose {
-				log.Println("fill bigJug")
-				bigJug.dump()
+				log.Println("fill sourceJug")
+				sourceJug.dump()
 			}
-			if status.LastStep {
+			if sourceJug.Current == measure || targetJug.Current == measure {
 				break
 			}			
 		}
 
-		if smallJug.Current == smallJug.Capacity {			
-			smallJug.empty()
-			status := s.buildJugsStatus(smallJug.Current == req.Measure, bigJug, smallJug)
-			s.outChan <- &SimulateResp {
-				Error: false,
-				Payload: status,
-			}
+		if targetJug.Current == targetJug.Capacity {			
+			targetJug.empty()
+			result = append(result, s.buildJugsStatus(sourceJug, targetJug))
 			if s.verbose {
-				log.Println("empty smallJug")
-				smallJug.dump()
+				log.Println("empty targetJug")
+				targetJug.dump()
 			}
-			if status.LastStep {
+			if sourceJug.Current == measure || targetJug.Current == measure {
 				break
 			}			
 		}
 	}
+
+	return result
+}
+
+func (s *SimulatorSvc) doSimulation(req *SimulateReq) []*JugsStatus {
+	// Run simulations async
+	sim1Ch := make(chan []*JugsStatus)
+	go func(ch chan []*JugsStatus) {
+		result := s.pour(req.Measure, *req.Jugs[0], *req.Jugs[1])		
+		ch <- result
+	}(sim1Ch)
+
+	sim2Ch := make(chan []*JugsStatus)
+	go func(ch chan []*JugsStatus) {
+		result := s.pour(req.Measure, *req.Jugs[1], *req.Jugs[0])		
+		ch <- result
+	}(sim2Ch)
+
+	// Wait and get result
+	result1 := <- sim1Ch
+	result2 := <- sim2Ch
+
+	log.Printf("end simulation 1 - steps: %d", len(result1))
+	log.Printf("end simulation 2 - steps: %d", len(result2))
+	if len(result1) > len(result2) {
+		return result2
+	}
+	return result1
 }
 
 func (s *SimulatorSvc) eventLoop() {
@@ -190,7 +190,11 @@ func (s *SimulatorSvc) eventLoop() {
 			log.Printf("--- start processing: %+v", req)
 
 			// Do simulation
-			s.doSimulation(req)
+			result := s.doSimulation(req)
+			s.outChan <- &SimulateResp {
+				Error: false,
+				Payload: result,
+			}
 
 			// End processing
 			s.isProcessing = false

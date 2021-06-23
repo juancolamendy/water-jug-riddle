@@ -14,5 +14,4 @@ type SimulateResp struct {
 
 type JugsStatus struct {
 	JugMap   map[string]Jug `json:"jugMap"`
-	LastStep bool           `json:"lastStep"`
 }

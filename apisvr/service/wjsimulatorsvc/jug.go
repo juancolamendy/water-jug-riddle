@@ -2,7 +2,6 @@ package wjsimulatorsvc
 
 import (
 	"log"
-	"time"
 
 	"github.com/juancolamendy/water-jug-riddle/apisvr/utils/mathutils"
 )
@@ -11,8 +10,6 @@ const (
 	STATE_EMPTY        = "empty"
 	STATE_FULL         = "full"
 	STATE_PARTIAL_FULL = "partial_full"
-
-	ARTIFICIAL_DELAY_SECS = 2
 )
 
 type Jug struct {
@@ -36,13 +33,11 @@ func (j *Jug) updateState() {
 func (j *Jug) fill() {
 	j.Current = j.Capacity
 	j.updateState()
-	time.Sleep(ARTIFICIAL_DELAY_SECS * time.Second)
 }
 
 func (j *Jug) empty() {
 	j.Current = 0
 	j.updateState()
-	time.Sleep(ARTIFICIAL_DELAY_SECS * time.Second)
 }
 
 func (j *Jug) transferTo(target *Jug) {
@@ -54,7 +49,6 @@ func (j *Jug) transferTo(target *Jug) {
 	// Update state
 	j.updateState()
 	target.updateState()
-	time.Sleep(ARTIFICIAL_DELAY_SECS * time.Second)
 }
 
 func (j *Jug) dump() {
