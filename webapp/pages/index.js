@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 
 import { Alert, Input, Button, Jug } from '../components/';
 
-import { useWebsocket } from '../hooks/';
+import { useDelayCall, useWebsocket } from '../hooks/';
 
 import constant from '../utils/constant';
 import locales from '../utils/locales';
@@ -21,6 +21,7 @@ const Index = () => {
 
 	// State
 	const [forceOpen, setForceOpen] = useState(false);
+	const [forceShowResult, setForceShowResult] = useState(false);
 
 	const [processing, setProcessing] = useState(false);
 	const [result, setResult] = useState(null);
@@ -51,15 +52,17 @@ const Index = () => {
 		if(data) {
 			if(data.error) {
 				setError(locales.errors[data.payload]);
-				setProcessing(false);
+				setForceShowResult(!forceShowResult);
 			} else {
-				if(data.payload.lastStep) {
-					setProcessing(false);
-				}
-				setResult(data.payload.jugMap);
+				setResult(data.payload);
+				setForceShowResult(!forceShowResult);				
 			}
 		}
 	}, [wsOutput]);
+
+	useDelayCall(forceShowResult, () => {
+		setProcessing(false);
+	}, constant.DELAY);		
 
 	// Handlers
 	const handleSubmit = (event) => {
@@ -78,14 +81,14 @@ const Index = () => {
 	};
 
 	return (
-	<div className="flex flex-col h-screen items-center pt-10 bg-gray-200">
+	<div className="flex flex-col h-full items-center p-10 bg-gray-200">
 
-		<div className="flex flex-col w-3/12">
+		<div className="flex flex-col flex-grow h-full lg:w-3/12 mb-5">
 			<h1 className="font-extralight text-center text-3xl">
 				{locales.app_title}
 			</h1>
 
-			{ error &&
+			{ error && !processing &&
 			<div className="mt-2">
 				<Alert caption={locales.label_error}
 					description={error}
@@ -129,11 +132,11 @@ const Index = () => {
 			</div>
 		</div>
 
-		{result && 
-		<div className="flex flex-row justify-between w-3/12 mt-5">
-			<Jug name="jug1" state={result['jug1'].state} stateLabel={locales.state[result['jug1'].state]} current={result['jug1'].current} />
-			<Jug name="jug2" state={result['jug2'].state} stateLabel={locales.state[result['jug2'].state]} current={result['jug2'].current} />
-		</div>
+		{result && !processing &&
+		result.map((x,i) => <div className="flex flex-row justify-between m-3 border-b-2 border-gray-600 pb-2" key={i}>
+			<Jug name="jug1" state={x.jugMap['jug1'].state} stateLabel={locales.state[x.jugMap['jug1'].state]} current={x.jugMap['jug1'].current} />
+			<Jug name="jug2" state={x.jugMap['jug2'].state} stateLabel={locales.state[x.jugMap['jug2'].state]} current={x.jugMap['jug2'].current} />
+		</div>)
 		}
 
 	</div>
